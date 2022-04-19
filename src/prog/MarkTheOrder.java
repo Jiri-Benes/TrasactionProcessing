@@ -16,9 +16,10 @@ import java.util.List;
 
 /**
  * @author locadmin
+ * class MarkTheOrder { public String markTheOrder (String fileLocation); }
  *
  */
-public class Proces {
+public class MarkTheOrder {
 	
 	private static final String COMMA_DELIMITER = ",";
 	private static final String PIPE_DELIMITER = "|";
@@ -36,17 +37,25 @@ public class Proces {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		String firstArg = "";
+		String mainFile;
 		if(args.length>0) {
 			firstArg = args[0];
 		}
-		
 		if(firstArg.isEmpty()) {
-			inputFilePath = Paths.get("./input.txt");
+			mainFile = "./input.txt";
 		} else {
-			inputFilePath = Paths.get(firstArg);
+			mainFile = firstArg;
 		}		
+		MarkTheOrder mto = new MarkTheOrder();
+		String out = mto.markTheOrder(mainFile);
+		System.out.print(out);
+	}
+	
+	public String markTheOrder(String fileLocation) {
+		
+		
+		inputFilePath = Paths.get(fileLocation);
 		
 		//HashMap<String, Integer> countryMap = new HashMap<String, Integer>();
 		//HashMap<String, Integer> countryOrderMap = new HashMap<String, Integer>();
@@ -54,7 +63,7 @@ public class Proces {
 		
 		readTrasaction();
 		generateOrder();
-		writeOutput();
+		return writeOutput();
 		
 	}
 
@@ -109,13 +118,16 @@ public class Proces {
 		
 	}
 	
-	private static void writeOutput() {
+	private static String writeOutput() {
 		System.out.println();
+		String out ="";
 	    for (TransactionData oneTrasaction : allTrasaction) {
 	        datesPerProvider.put(oneTrasaction.provider, oneTrasaction.dateTimedate);
 	        String order = "0"; 
-	        System.out.println(oneTrasaction.provider +PIPE_DELIMITER+ order +PIPE_DELIMITER+ oneTrasaction.trasation);
+	        //System.out.println(oneTrasaction.provider +PIPE_DELIMITER+ order +PIPE_DELIMITER+ oneTrasaction.trasation);
+	        out = out + oneTrasaction.provider +PIPE_DELIMITER+ order +PIPE_DELIMITER+ oneTrasaction.trasation+"\n";
 	    }		
+	    return out;
 	}	
 }
 
