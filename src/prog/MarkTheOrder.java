@@ -11,11 +11,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * @author locadmin
+ * @author Jiri Benes
+ * @since 20.04.2022
  * class MarkTheOrder { public String markTheOrder (String fileLocation); }
  *
  */
@@ -31,7 +33,7 @@ public class MarkTheOrder {
 	
 	static Path inputFilePath; 
 	static ArrayList<TransactionData> allTrasaction = new ArrayList<TransactionData>();
-	static HashMap<String, LocalDateTime> datesPerProvider = new HashMap<String, LocalDateTime>();
+	static HashMap<String, ArrayList<LocalDateTime>> datesPerProvider = new HashMap<String, ArrayList<LocalDateTime>>();
 	
 	/**
 	 * @param args
@@ -54,13 +56,8 @@ public class MarkTheOrder {
 	
 	public String markTheOrder(String fileLocation) {
 		
-		
 		inputFilePath = Paths.get(fileLocation);
-		
-		//HashMap<String, Integer> countryMap = new HashMap<String, Integer>();
-		//HashMap<String, Integer> countryOrderMap = new HashMap<String, Integer>();
-				 
-		
+					 		
 		readTrasaction();
 		generateOrder();
 		return writeOutput();
@@ -93,9 +90,9 @@ public class MarkTheOrder {
 		        }		        
 		        String dateTime = values[DATETIME_COLUMN];
 		        dateTime = dateTime.trim();
-		        System.out.println(trasation+ ":" +provider+ ":" +customerNumber+ ":" +dateTime);
+		        //System.out.println(trasation+ ":" +provider+ ":" +customerNumber+ ":" +dateTime);
 		        TransactionData td = new TransactionData();
-		        td.order = i;
+		        td.originalOrder = i;
 		        td.dateTime = dateTime;
 		        td.provider = provider;
 		        td.trasation = trasation;
@@ -113,22 +110,44 @@ public class MarkTheOrder {
 	private static void generateOrder() {
 	    for (TransactionData oneTrasaction : allTrasaction) {
 	        //System.out.println(i);
-	        datesPerProvider.put(oneTrasaction.provider, oneTrasaction.dateTimedate);
+	    	if(datesPerProvider.containsKey(oneTrasaction.provider)) {
+	    		ArrayList<LocalDateTime> forProvider = datesPerProvider.get(oneTrasaction.provider);
+	    		forProvider.add(oneTrasaction.dateTimedate);
+	    		datesPerProvider.put(oneTrasaction.provider, forProvider);
+	    	} else {
+	    		ArrayList<LocalDateTime> forProvider = new ArrayList<LocalDateTime>();
+    			forProvider.add(oneTrasaction.dateTimedate);
+    			datesPerProvider.put(oneTrasaction.provider, forProvider);	    			    		
+	    	}
 	    }
-		
+	    // sort per provider
+	    for (String oneProvider : datesPerProvider.keySet()) {
+	    	ArrayList<LocalDateTime> forOneProvider = datesPerProvider.get(oneProvider);
+	    	Collections.sort(forOneProvider);
+	    	datesPerProvider.put(oneProvider, forOneProvider);	    	
+	    }		
 	}
 	
 	private static String writeOutput() {
-		System.out.println();
+		//System.out.println();
 		String out ="";
 	    for (TransactionData oneTrasaction : allTrasaction) {
-	        datesPerProvider.put(oneTrasaction.provider, oneTrasaction.dateTimedate);
+	    	// get transaction order
 	        String order = "0"; 
+	        ArrayList<LocalDateTime> forOneProvider = datesPerProvider.get(oneTrasaction.provider);
+	        int i=1;
+			for (LocalDateTime ldt : forOneProvider){
+				if(ldt == oneTrasaction.dateTimedate) {
+					order =  String.valueOf(i);
+					oneTrasaction.trasactionOrderPerProvider = i;
+ 					break;
+				}
+				i++;
+		    }		        
 	        //System.out.println(oneTrasaction.provider +PIPE_DELIMITER+ order +PIPE_DELIMITER+ oneTrasaction.trasation);
 	        out = out + oneTrasaction.provider +PIPE_DELIMITER+ order +PIPE_DELIMITER+ oneTrasaction.trasation+"\n";
 	    }		
 	    return out;
 	}	
 }
-
 
