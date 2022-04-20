@@ -23,8 +23,9 @@ import java.util.List;
  */
 public class MarkTheOrder {
 	
-	private static final String COMMA_DELIMITER = ",";
-	private static final String PIPE_DELIMITER = "|";
+	private static final char COMMA_DELIMITER = ',';
+	private static final char PIPE_DELIMITER = '|';
+	private static final char QUOTE_CHAR = '"';
 	
 	// transaction,provider/customer number,transaction datetime newline
 	private static final int TRANSACTION_COLUMN = 0;
@@ -73,14 +74,15 @@ public class MarkTheOrder {
 		    while ((line = reader.readLine()) != null) {
 		    	i++;
 		        //System.out.println(line);
-		        String[] values = line.split(COMMA_DELIMITER);
-		        if(values.length < 3) {
+		        //String[] values = line.split(COMMA_DELIMITER);
+		        List<String> values = splitQuotedStr(line, COMMA_DELIMITER, QUOTE_CHAR, true);
+		        if(values.size() < 3) {
 		        	System.err.println("Wrong format of line("+i+"):"+line);
 		        	continue;
 		        }
-		        String trasation = values[TRANSACTION_COLUMN];
+		        String trasation = values.get(TRANSACTION_COLUMN);
 		        trasation = trasation.trim();
-		        String provider = values[PROVIDER_COLUMN];
+		        String provider = values.get(PROVIDER_COLUMN);
 		        provider = provider.trim();
 		        String customerNumber="";
 		        String[] values2 = provider.split("/");
@@ -88,7 +90,7 @@ public class MarkTheOrder {
 		        	provider = values2[0].trim();
 		        	customerNumber = values2[1].trim();
 		        }		        
-		        String dateTime = values[DATETIME_COLUMN];
+		        String dateTime = values.get(DATETIME_COLUMN);
 		        dateTime = dateTime.trim();
 		        //System.out.println(trasation+ ":" +provider+ ":" +customerNumber+ ":" +dateTime);
 		        TransactionData td = new TransactionData();
@@ -149,5 +151,42 @@ public class MarkTheOrder {
 	    }		
 	    return out;
 	}	
+
+    public static List<String> splitQuotedStr(String str, char delimiter, char quote, boolean trim) {
+        int startPos = 0;
+        boolean insideQuotation = false;
+        boolean wasQuoted = false;
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == quote) {
+                insideQuotation = !insideQuotation;
+                wasQuoted = true;
+            }
+            if (!insideQuotation && c == delimiter) {
+            	String subStr;
+            	if(wasQuoted) {
+            		subStr = str.substring(startPos+1, i-1);
+            	} else {
+            		subStr = str.substring(startPos, i);
+            	}
+                if (trim) {
+                    subStr = subStr.trim();
+                }
+                result.add(subStr);
+                startPos = i + 1;
+                wasQuoted = false;
+                continue;
+            }
+        }
+        if (startPos < str.length()) {
+            String subStr = str.substring(startPos, str.length());
+            if (trim) {
+                subStr = subStr.trim();
+            }
+            result.add(subStr);
+        }
+        return result;
+    }	
 }
 
